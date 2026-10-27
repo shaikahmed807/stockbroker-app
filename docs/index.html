@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>StockBroker · Project Showcase</title>
+<meta name="description" content="Interactive overview of the StockBroker platform: architecture, live demo, API and test quality." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2314213d'/%3E%3Cpath d='M6 21l6-6 5 4 9-9' fill='none' stroke='%23e8a33d' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --paper: #edf0f3; --surface: #ffffff; --surface-2: #f6f8fa;
+  --ink: #14213d; --ink-2: #3a4a63; --ink-3: #66758a;
+  --rule: #dde3ea; --rule-strong: #c7d0db;
+  --up: #1f8a5b; --up-bg: #e3f3eb; --down: #c8403a; --down-bg: #fbe7e5;
+  --gold: #e8a33d; --gold-deep: #c98417; --gold-bg: #fdf3e2;
+  --accent: #2f6fde; --accent-bg: #e6eefc;
+  --display: 'Bricolage Grotesque', 'Figtree', system-ui, sans-serif;
+  --body: 'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --shadow: 0 1px 0 rgba(20,33,61,.04), 0 10px 28px -18px rgba(20,33,61,.35);
+  --r: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d1424; --surface: #151f33; --surface-2: #1b2740;
+    --ink: #e8edf5; --ink-2: #b9c4d6; --ink-3: #8795ab;
+    --rule: #26334d; --rule-strong: #34446a;
+    --up: #3fbf86; --up-bg: #12322a; --down: #ef6b63; --down-bg: #3a1c1f;
+    --gold: #f0b252; --gold-deep: #f0b252; --gold-bg: #3a2c14;
+    --accent: #6f9cf0; --accent-bg: #1b2a4a;
+    --shadow: 0 1px 0 rgba(0,0,0,.2), 0 10px 28px -18px rgba(0,0,0,.6);
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0d1424; --surface: #151f33; --surface-2: #1b2740;
+  --ink: #e8edf5; --ink-2: #b9c4d6; --ink-3: #8795ab;
+  --rule: #26334d; --rule-strong: #34446a;
+  --up: #3fbf86; --up-bg: #12322a; --down: #ef6b63; --down-bg: #3a1c1f;
+  --gold: #f0b252; --gold-deep: #f0b252; --gold-bg: #3a2c14;
+  --accent: #6f9cf0; --accent-bg: #1b2a4a;
+  --shadow: 0 1px 0 rgba(0,0,0,.2), 0 10px 28px -18px rgba(0,0,0,.6);
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.6 var(--body); -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--display); letter-spacing: -.015em; line-height: 1.15; margin: 0; }
+p { margin: 0; }
+a { color: inherit; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ink-3); }
+.mono { font-family: var(--mono); font-size: .86em; }
+
+/* ---------- top bar ---------- */
+.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--rule); }
+.top .wrap { display: flex; align-items: center; gap: 20px; height: 58px; }
+.brand { display: flex; align-items: center; gap: 10px; font: 700 1.05rem var(--display); text-decoration: none; }
+.brand svg { width: 28px; height: 28px; }
+.toc { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+.toc a { text-decoration: none; padding: 6px 10px; border-radius: 8px; color: var(--ink-2); font-weight: 500; font-size: .92rem; white-space: nowrap; }
+.toc a:hover, .toc a.on { background: var(--surface); color: var(--ink); }
+.theme-btn { border: 1px solid var(--rule); background: var(--surface); border-radius: 8px; width: 36px; height: 34px; flex: none; }
+
+/* ---------- hero ---------- */
+.hero { padding: 56px 0 28px; }
+.eyebrow { display: inline-flex; gap: 8px; align-items: center; font-weight: 600; font-size: .85rem; color: var(--ink-2); background: var(--surface); border: 1px solid var(--rule); padding: 4px 12px; border-radius: 999px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--up); box-shadow: 0 0 0 0 var(--up); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--up) 60%, transparent); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+.hero h1 { font-size: clamp(2rem, 5vw, 3.3rem); margin: 18px 0 14px; max-width: 18ch; }
+.hero h1 em { font-style: normal; color: var(--gold-deep); }
+.hero .lede { font-size: 1.12rem; color: var(--ink-2); max-width: 62ch; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border-radius: 10px; border: 1px solid var(--rule-strong); background: var(--surface); font-weight: 600; text-decoration: none; font-size: .95rem; }
+.btn:hover { border-color: var(--ink-3); }
+.btn-primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn-gold { background: var(--gold); color: #3b2607; border-color: var(--gold); }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 36px; }
+.kpi { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow); }
+.kpi b { display: block; font: 700 2rem/1.1 var(--display); }
+.kpi span { color: var(--ink-3); font-size: .9rem; }
+.kpi.good b { color: var(--up); }
+
+/* ---------- sections ---------- */
+section.block { padding: 48px 0 8px; scroll-margin-top: 64px; }
+.sec-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.sec-head h2 { font-size: 1.75rem; }
+.sec-head p { color: var(--ink-2); max-width: 64ch; margin-top: 6px; }
+.panel { background: var(--surface); border: 1px solid var(--rule); border-radius: var(--r); box-shadow: var(--shadow); }
+
+/* ---------- architecture ---------- */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; }
+.arch-canvas { padding: 12px; }
+.flows { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 4px 10px; }
+.chip { border: 1px solid var(--rule-strong); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: .88rem; font-weight: 600; color: var(--ink-2); }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+svg.diagram { width: 100%; height: auto; display: block; }
+.node rect { fill: var(--surface-2); stroke: var(--rule-strong); stroke-width: 1.5; transition: fill .2s, stroke .2s; }
+.node { cursor: pointer; }
+.node:hover rect, .node.sel rect { stroke: var(--accent); fill: var(--accent-bg); }
+.node.lit rect { stroke: var(--gold); fill: var(--gold-bg); }
+.node.future rect { stroke-dasharray: 6 5; }
+.node text { fill: var(--ink); font: 600 14px var(--body); pointer-events: none; }
+.node text.sub { fill: var(--ink-3); font: 500 11.5px var(--body); }
+.edge { fill: none; stroke: var(--rule-strong); stroke-width: 2; marker-end: url(#arrow); transition: stroke .2s; }
+.edge.dash { stroke-dasharray: 6 6; }
+.edge.lit { stroke: var(--gold); stroke-width: 3; }
+.elabel { fill: var(--ink-3); font: 500 11px var(--body); }
+#arrow path { fill: var(--rule-strong); }
+.packet { fill: var(--gold); filter: drop-shadow(0 0 6px var(--gold)); }
+.side { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.side h3 { font-size: 1.2rem; }
+.side .tag { align-self: flex-start; font-size: .78rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-bg); padding: 2px 8px; border-radius: 6px; }
+.side ul { margin: 0; padding-left: 18px; color: var(--ink-2); }
+.side li { margin: 3px 0; }
+.stepper { border-top: 1px solid var(--rule); margin-top: 10px; padding: 12px 6px 4px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stepper .cap { flex: 1 1 280px; min-height: 2.6em; color: var(--ink-2); }
+.stepper .cap b { color: var(--ink); }
+.ctrl { border: 1px solid var(--rule-strong); background: var(--surface); border-radius: 8px; padding: 6px 12px; font-weight: 600; font-size: .9rem; }
+.ctrl:disabled { opacity: .45; cursor: default; }
+.progress { display: flex; gap: 4px; }
+.progress i { width: 18px; height: 4px; border-radius: 2px; background: var(--rule); }
+.progress i.on { background: var(--gold); }
+
+/* ---------- live demo ---------- */
+.demo { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px; }
+.watch { padding: 6px; }
+.watch-row { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; width: 100%; padding: 10px 12px; border: 0; background: none; border-radius: 9px; text-align: left; }
+.watch-row:hover { background: var(--surface-2); }
+.watch-row.sel { background: var(--accent-bg); }
+.watch-row b { font-weight: 700; }
+.watch-row small { display: block; color: var(--ink-3); font-size: .8rem; }
+.chg { font-weight: 600; font-size: .9rem; min-width: 64px; text-align: right; }
+.up { color: var(--up); } .down { color: var(--down); }
+.flash-up { animation: fu .8s; } .flash-down { animation: fd .8s; }
+@keyframes fu { from { background: var(--up-bg); } to { background: transparent; } }
+@keyframes fd { from { background: var(--down-bg); } to { background: transparent; } }
+.detail { padding: 18px; }
+.detail-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: baseline; }
+.detail-head h3 { font-size: 1.5rem; }
+.big { font: 700 1.8rem var(--display); }
+.chart-box { margin: 12px 0; height: 190px; }
+.chart-box svg { width: 100%; height: 100%; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.metric { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; position: relative; }
+.metric dt { font-size: .78rem; color: var(--ink-3); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.metric dd { margin: 2px 0 0; font-weight: 700; font-size: 1.05rem; }
+.locked .metric.pro dd { filter: blur(6px); user-select: none; }
+.tier { display: inline-flex; border: 1px solid var(--rule-strong); border-radius: 10px; overflow: hidden; }
+.tier button { border: 0; background: none; padding: 7px 14px; font-weight: 600; font-size: .9rem; }
+.tier button.on { background: var(--ink); color: var(--paper); }
+.tier button.on.gold { background: var(--gold); color: #3b2607; }
+.signal { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); }
+.signal .lbl { font: 700 1.2rem var(--display); }
+.gauge { position: relative; flex: 1 1 160px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--down), var(--rule-strong) 50%, var(--up)); }
+.gauge span { position: absolute; top: -5px; width: 4px; height: 18px; border-radius: 2px; background: var(--ink); transform: translateX(-2px); transition: left .4s; }
+.reasons { margin: 10px 0 0; padding-left: 18px; color: var(--ink-2); font-size: .93rem; }
+.lock-note { margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: var(--gold-bg); color: var(--ink); font-size: .93rem; }
+.disclaimer { margin-top: 10px; font-size: .8rem; color: var(--ink-3); }
+
+/* ---------- API explorer ---------- */
+.api { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; }
+.api-list { padding: 10px; }
+.api-tools { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 4px 10px; }
+.api-tools input { flex: 1 1 180px; border: 1px solid var(--rule-strong); background: var(--surface); color: var(--ink); border-radius: 9px; padding: 7px 12px; font: inherit; }
+.ep { display: grid; grid-template-columns: 62px 1fr auto; gap: 10px; align-items: center; width: 100%; border: 0; background: none; text-align: left; padding: 9px 10px; border-radius: 9px; }
+.ep:hover { background: var(--surface-2); }
+.ep.sel { background: var(--accent-bg); }
+.method { font: 700 .74rem var(--mono); padding: 3px 0; border-radius: 6px; text-align: center; }
+.m-GET { background: var(--up-bg); color: var(--up); }
+.m-POST { background: var(--accent-bg); color: var(--accent); }
+.ep code { font-family: var(--mono); font-size: .86rem; overflow-wrap: anywhere; }
+.badge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-3); white-space: nowrap; }
+.badge.pub { background: var(--up-bg); color: var(--up); }
+.badge.tier { background: var(--gold-bg); color: var(--gold-deep); }
+.api-detail { padding: 18px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.api-detail h3 { font-family: var(--mono); font-size: 1rem; overflow-wrap: anywhere; }
+pre { margin: 0; background: #0f1830; color: #dbe5f5; border-radius: 10px; padding: 12px 14px; font: 400 .82rem/1.55 var(--mono); overflow-x: auto; white-space: pre; }
+.k { color: #8fb8ff; } .s { color: #b6e3a1; } .n { color: #f5c37a; }
+.label { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-3); }
+
+/* ---------- tests ---------- */
+.tests { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 16px; }
+.donut-box { padding: 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
+.legend { display: grid; gap: 6px; width: 100%; font-size: .92rem; }
+.legend div { display: flex; justify-content: space-between; gap: 10px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 8px; vertical-align: middle; }
+.suites { padding: 10px 14px 14px; }
+.suite { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr) 36px; gap: 12px; align-items: center; padding: 6px 4px; border-radius: 8px; width: 100%; border: 0; background: none; text-align: left; }
+.suite:hover { background: var(--surface-2); }
+.suite .name { font-weight: 600; font-size: .92rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar { height: 10px; border-radius: 5px; background: var(--surface-2); overflow: hidden; }
+.bar span { display: block; height: 100%; border-radius: 5px; }
+.suite-info { margin: 2px 4px 8px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--surface-2); border-radius: 0 8px 8px 0; color: var(--ink-2); font-size: .9rem; }
+.layer-backend { background: var(--accent); } .layer-frontend { background: var(--gold); } .layer-web { background: #7b61d1; } .layer-data { background: var(--up); }
+
+/* ---------- roadmap ---------- */
+.road { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.road .panel { padding: 18px; }
+.road h3 { font-size: 1.05rem; margin-bottom: 10px; display: flex; gap: 8px; align-items: center; }
+.road ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.road li { display: grid; grid-template-columns: 22px 1fr; gap: 6px; color: var(--ink-2); font-size: .94rem; }
+.road label { display: contents; cursor: pointer; }
+.road input { accent-color: var(--up); margin-top: 4px; }
+.road .pct { font: 700 .85rem var(--body); color: var(--ink-3); margin-left: auto; }
+
+.stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.stack span { background: var(--surface); border: 1px solid var(--rule); padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: .9rem; }
+footer { margin-top: 56px; border-top: 1px solid var(--rule); padding: 24px 0 40px; color: var(--ink-3); font-size: .9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 920px) {
+  .arch, .demo, .api, .tests { grid-template-columns: 1fr; }
+  .road { grid-template-columns: 1fr; }
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .toc { display: none; }
+  .theme-btn { margin-left: auto; }
+}
+@media (max-width: 520px) {
+  .suite { grid-template-columns: minmax(0, 1fr) 80px 30px; }
+  .hero { padding-top: 36px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#14213d"/><path d="M6 21l6-6 5 4 9-9" fill="none" stroke="#e8a33d" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      StockBroker
+    </a>
+    <nav class="toc" aria-label="Sections">
+      <a href="#architecture">Architecture</a>
+      <a href="#demo">Live demo</a>
+      <a href="#api">API</a>
+      <a href="#quality">Quality</a>
+      <a href="#roadmap">Roadmap</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+  </div>
+</header>
+
+<main id="top">
+  <!-- ================= HERO ================= -->
+  <section class="hero wrap">
+    <span class="eyebrow"><span class="dot"></span> Project showcase · built for review</span>
+    <h1>Live stock analysis, streamed <em>tick by tick</em>.</h1>
+    <p class="lede">StockBroker is a full-stack trading-desk app: real-time NSE prices over WebSockets, on-the-fly technical analysis, and a paid Premium plan. This page lets you explore how it's built, try the analysis engine, and see the test results.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#architecture">Explore the architecture</a>
+      <a class="btn btn-gold" href="#demo">Try the live demo</a>
+      <a class="btn" href="https://github.com/shaikahmed807/stockbroker-app">View source on GitHub</a>
+      <a class="btn" href="https://github.com/shaikahmed807/stockbroker-app/actions/workflows/ci.yml">CI test runs</a>
+    </div>
+    <div class="kpis">
+      <div class="kpi good"><b class="num" id="kpiTests">—</b><span>automated tests, all passing</span></div>
+      <div class="kpi"><b class="num">14</b><span>REST endpoints + 1 WebSocket feed</span></div>
+      <div class="kpi"><b class="num">2 s</b><span>tick interval, 12 NSE large caps</span></div>
+      <div class="kpi"><b class="num">5</b><span>containers, one <span class="mono">docker compose up</span></span></div>
+    </div>
+    <div class="stack" aria-label="Technology stack">
+      <span>Java 17</span><span>Spring Boot 3.3</span><span>Spring Security + JWT</span><span>Hibernate / JPA</span><span>MySQL 8.4</span><span>Redis 7.4</span><span>Apache Kafka 3.8</span><span>React 18</span><span>Vite</span><span>Recharts</span><span>STOMP WebSocket</span><span>Docker</span><span>GitHub Actions</span>
+    </div>
+  </section>
+
+  <!-- ================= ARCHITECTURE ================= -->
+  <section class="block wrap" id="architecture">
+    <div class="sec-head">
+      <div>
+        <h2>Architecture</h2>
+        <p>Click any component to see what it does. Pick a flow and press <b>Play</b> to watch a request travel through the system step by step.</p>
+      </div>
+      <a class="btn" href="https://github.com/shaikahmed807/stockbroker-app/blob/main/ARCHITECTURE.md">Full architecture document →</a>
+    </div>
+    <div class="arch">
+      <div class="panel arch-canvas">
+        <div class="flows" role="group" aria-label="Choose a flow" id="flowChips"></div>
+        <svg class="diagram" viewBox="0 0 900 470" role="img" aria-label="StockBroker architecture diagram" id="diagram">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z"/></marker>
+          </defs>
+          <g id="edges"></g>
+          <g id="nodes"></g>
+          <circle class="packet" id="packet" r="7" cx="-20" cy="-20" />
+        </svg>
+        <div class="stepper">
+          <button class="ctrl" id="prevBtn" aria-label="Previous step">◀</button>
+          <button class="ctrl" id="playBtn">▶ Play</button>
+          <button class="ctrl" id="nextBtn" aria-label="Next step">▶</button>
+          <div class="progress" id="progress" aria-hidden="true"></div>
+          <p class="cap" id="caption" aria-live="polite">Choose a flow above, then press Play.</p>
+        </div>
+      </div>
+      <aside class="panel side" id="sidePanel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <!-- ================= LIVE DEMO ================= -->
+  <section class="block wrap" id="demo">
+    <div class="sec-head">
+      <div>
+        <h2>Live demo: the analysis engine</h2>
+        <p>Prices below move every 2 seconds using the same random-walk model as the backend simulator, and the indicators use the same formulas and scoring as <span class="mono">StockAnalysisService</span>. Switch tiers to see what Premium unlocks.</p>
+      </div>
+      <div class="tier" role="group" aria-label="Plan tier">
+        <button id="tierFree" class="on">Free</button>
+        <button id="tierPro" class="gold">Premium</button>
+      </div>
+    </div>
+    <div class="demo">
+      <div class="panel watch" id="watchlist" role="list" aria-label="Watchlist"></div>
+      <div class="panel detail" id="detail"></div>
+    </div>
+  </section>
+
+  <!-- ================= API ================= -->
+  <section class="block wrap" id="api">
+    <div class="sec-head">
+      <div>
+        <h2>API explorer</h2>
+        <p>Every endpoint the React app uses. Select one to see an example request and response.</p>
+      </div>
+    </div>
+    <div class="api">
+      <div class="panel api-list">
+        <div class="api-tools">
+          <input type="search" id="apiSearch" placeholder="Filter endpoints…" aria-label="Filter endpoints" />
+          <div class="flows" id="apiFilter" role="group" aria-label="Access filter"></div>
+        </div>
+        <div id="apiRows"></div>
+      </div>
+      <div class="panel api-detail" id="apiDetail"></div>
+    </div>
+  </section>
+
+  <!-- ================= QUALITY ================= -->
+  <section class="block wrap" id="quality">
+    <div class="sec-head">
+      <div>
+        <h2>Quality: automated tests</h2>
+        <p>Every push runs the full suite on GitHub Actions — no database, Redis or Kafka needed. Click a suite to see what it proves.</p>
+      </div>
+      <div class="flows" id="testFilter" role="group" aria-label="Filter test suites"></div>
+    </div>
+    <div class="tests">
+      <div class="panel donut-box">
+        <svg viewBox="0 0 120 120" width="170" height="170" id="donut" role="img" aria-label="Tests by layer"></svg>
+        <div class="legend" id="legend"></div>
+        <a class="btn" href="https://github.com/shaikahmed807/stockbroker-app/actions/workflows/ci.yml">See the latest CI run →</a>
+      </div>
+      <div class="panel suites" id="suites"></div>
+    </div>
+  </section>
+
+  <!-- ================= ROADMAP ================= -->
+  <section class="block wrap" id="roadmap">
+    <div class="sec-head">
+      <div>
+        <h2>Status &amp; roadmap</h2>
+        <p>What is done, and what is planned before a production launch. Tick items off as they land (saved in this browser only).</p>
+      </div>
+    </div>
+    <div class="road" id="road"></div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>StockBroker · Spring Boot · Kafka · Redis · MySQL · React</span>
+    <span>Market data is simulated. Signals are for learning only and are not investment advice.</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, el = document) => el.querySelector(s);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } },
+  };
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------------- theme ---------------- */
+  const savedTheme = store.get('sb-theme', null);
+  if (savedTheme) document.documentElement.dataset.theme = savedTheme;
+  $('#themeBtn').addEventListener('click', () => {
+    const dark = getComputedStyle(document.body).backgroundColor !== 'rgb(237, 240, 243)';
+    const next = dark ? 'light' : 'dark';
+    document.documentElement.dataset.theme = next;
+    store.set('sb-theme', next);
+  });
+
+  /* ================= ARCHITECTURE ================= */
+  const NODES = {
+    browser: { x: 10, y: 195, w: 120, h: 70, title: 'Browser', sub: 'investor', tag: 'Client',
+      text: 'The investor uses any modern browser. No install, no plugin.',
+      points: ['Holds the JWT and sends it as a Bearer header', 'Keeps one WebSocket open for live prices'] },
+    spa: { x: 170, y: 195, w: 140, h: 70, title: 'React SPA', sub: 'Vite · nginx', tag: 'Frontend',
+      text: 'Single-page app built with React 18 and served by nginx, which also proxies /api and /ws to the backend.',
+      points: ['Pages: Sign in, Sign up, Markets, Stock detail, Premium', 'AuthContext (session) + MarketContext (live quotes)', 'Recharts live chart, ticker tape, flash-on-change table', 'Auto sign-out when the API answers 401'] },
+    api: { x: 360, y: 165, w: 200, h: 130, title: 'Spring Boot API', sub: 'REST · WebSocket · Security', tag: 'Backend',
+      text: 'Java 17 / Spring Boot 3.3 service: controllers, business services, JWT security, Kafka consumers and schedulers.',
+      points: ['JwtAuthenticationFilter on every request', 'StockAnalysisService: SMA, EMA, RSI, MACD, Bollinger, signal', 'SubscriptionService + 15-minute expiry job', 'MarketDataConsumer pushes quotes over STOMP', 'One JSON error shape via GlobalExceptionHandler'] },
+    sim: { x: 360, y: 20, w: 200, h: 64, title: 'Market feed', sub: 'simulator → real vendor later', tag: 'Producer',
+      text: 'A scheduled job moves 12 NSE large caps with a geometric random walk and publishes a tick every 2 seconds.',
+      points: ['Backfills 120 points on start so charts are never empty', 'Swap for a broker/vendor feed by publishing the same JSON to Kafka'] },
+    kafka: { x: 640, y: 20, w: 220, h: 64, title: 'Apache Kafka', sub: 'stock-ticks · subscription-events', tag: 'Event stream',
+      text: 'Decouples producers from consumers. Ticks are keyed by symbol (3 partitions) so each stock stays in order.',
+      points: ['stock-ticks: market data pipeline', 'subscription-events: ACTIVATED / CANCELLED / EXPIRED', 'KRaft mode — no ZooKeeper'] },
+    redis: { x: 640, y: 195, w: 220, h: 70, title: 'Redis', sub: 'hot cache · token blacklist', tag: 'In-memory store',
+      text: 'Serves everything that must be fast: latest quotes, the last 300 ticks per stock, 2-second analysis cache and revoked tokens.',
+      points: ['stock:quote:{SYM}, stock:history:{SYM}', 'stock:analysis:{SYM}:{tier} (TTL 2 s)', 'jwt:blacklist:{jti} (TTL = token life)', 'If Redis is down, history falls back to MySQL'] },
+    mysql: { x: 640, y: 375, w: 220, h: 70, title: 'MySQL', sub: 'Hibernate / JPA', tag: 'System of record',
+      text: 'Durable storage for accounts, billing history, stock master data and the full tick archive.',
+      points: ['Tables: users, subscriptions, stocks, price_ticks', 'Passwords stored as BCrypt hashes', 'Indexed for the expiry job and history paging'] },
+    pay: { x: 360, y: 375, w: 200, h: 70, title: 'Payment gateway', sub: 'demo today · Razorpay/Stripe', tag: 'Planned', future: true,
+      text: 'Subscriptions are activated with a demo payment reference today. One method is the plug-in point for a real gateway.',
+      points: ['Create order → hosted checkout → verify webhook', 'Then run the existing activation logic'] },
+  };
+  const EDGES = {
+    'browser-spa': { d: 'M130,230 L170,230', label: '' },
+    'spa-api': { d: 'M310,215 L360,215', label: 'REST' },
+    'api-spa': { d: 'M360,250 L310,250', label: 'WS' },
+    'sim-kafka': { d: 'M560,52 L640,52', label: 'ticks' },
+    'kafka-api': { d: 'M690,84 L540,165', label: '' },
+    'api-kafka': { d: 'M560,190 L770,84', label: 'events' },
+    'api-redis': { d: 'M560,230 L640,230', label: '' },
+    'api-mysql': { d: 'M560,275 L650,375', label: 'JPA' },
+    'api-pay': { d: 'M460,295 L460,375', label: '', dash: true },
+  };
+  const FLOWS = {
+    tick: { name: 'Live price tick', steps: [
+      ['sim-kafka', false, 'Publish', 'The simulator publishes a StockTickEvent to <b>stock-ticks</b>, keyed by symbol.'],
+      ['kafka-api', false, 'Consume', '<b>MarketDataConsumer</b> receives the tick (ticks for one stock arrive in order).'],
+      ['api-redis', false, 'Cache', 'Latest quote saved and appended to the 300-tick history list in <b>Redis</b>.'],
+      ['api-mysql', false, 'Archive', 'Tick archived in <b>MySQL</b>; the stock row gets the new price, high and low.'],
+      ['api-spa', false, 'Push', 'Quote pushed over STOMP to <b>/topic/prices</b> — no polling.'],
+      ['browser-spa', true, 'Render', 'Ticker tape, table and chart update instantly in the <b>browser</b>.'],
+    ] },
+    login: { name: 'Sign in', steps: [
+      ['browser-spa', false, 'Submit', 'The user submits email and password on the <b>Sign in</b> page.'],
+      ['spa-api', false, 'POST /api/auth/login', 'The SPA calls the public login endpoint.'],
+      ['api-mysql', false, 'Verify', 'User loaded from <b>MySQL</b>; the password is checked against its <b>BCrypt</b> hash.'],
+      ['api-spa', false, 'JWT', 'A signed JWT (24 h, unique id) is returned and stored by the SPA.'],
+      ['spa-api', false, 'Bearer', 'Every later request carries <b>Authorization: Bearer …</b>.'],
+      ['api-redis', false, 'Revocation check', 'The filter checks the token id is not on the <b>Redis</b> blacklist, then grants USER (+ PREMIUM).'],
+    ] },
+    premium: { name: 'Buy Premium', steps: [
+      ['spa-api', false, 'Subscribe', 'User confirms a plan; SPA calls <b>POST /api/subscriptions/subscribe</b>.'],
+      ['api-pay', false, 'Payment', 'Payment step (demo today; gateway checkout in production).'],
+      ['api-mysql', false, 'Activate', 'Subscription row saved; the user’s plan end date is set — or <b>extended</b> if already Premium.'],
+      ['api-kafka', false, 'Event', '<b>ACTIVATED</b> event published asynchronously; the request never waits on Kafka.'],
+      ['kafka-api', false, 'Listen', '<b>SubscriptionEventListener</b> handles side effects (receipts, analytics).'],
+      ['api-redis', false, 'Stats', 'Subscription counters updated in <b>Redis</b>.'],
+      ['api-spa', false, 'Unlocked', 'The UI refreshes: RSI, MACD, Bollinger and buy/sell signals are now visible.'],
+    ] },
+    logout: { name: 'Sign out', steps: [
+      ['spa-api', false, 'POST /api/auth/logout', 'The SPA asks the server to revoke the current token.'],
+      ['api-redis', false, 'Blacklist', 'Token id stored in <b>Redis</b> until the moment it would have expired.'],
+      ['api-spa', false, 'Done', 'Local session cleared; the same token is now rejected everywhere.'],
+    ] },
+  };
+  const NS = 'http://www.w3.org/2000/svg';
+  const mk = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+  const gEdges = $('#edges'), gNodes = $('#nodes'), packet = $('#packet');
+  const edgeEls = {};
+  for (const [id, e] of Object.entries(EDGES)) {
+    edgeEls[id] = mk('path', { d: e.d, class: 'edge' + (e.dash ? ' dash' : ''), id: 'e-' + id }, gEdges);
+    if (e.label) {
+      const p = edgeEls[id], len = p.getTotalLength(), mid = p.getPointAtLength(len / 2);
+      const t = mk('text', { x: mid.x + 6, y: mid.y - 6, class: 'elabel' }, gEdges); t.textContent = e.label;
+    }
+  }
+  const nodeEls = {};
+  for (const [id, n] of Object.entries(NODES)) {
+    const g = mk('g', { class: 'node' + (n.future ? ' future' : ''), tabindex: 0, role: 'button', 'aria-label': n.title }, gNodes);
+    mk('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 12 }, g);
+    const t = mk('text', { x: n.x + n.w / 2, y: n.y + n.h / 2 - 3, 'text-anchor': 'middle' }, g); t.textContent = n.title;
+    const s = mk('text', { x: n.x + n.w / 2, y: n.y + n.h / 2 + 15, 'text-anchor': 'middle', class: 'sub' }, g); s.textContent = n.sub;
+    g.addEventListener('click', () => selectNode(id));
+    g.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); selectNode(id); } });
+    nodeEls[id] = g;
+  }
+  function selectNode(id) {
+    const n = NODES[id];
+    Object.values(nodeEls).forEach((g) => g.classList.remove('sel'));
+    nodeEls[id].classList.add('sel');
+    $('#sidePanel').innerHTML = `<span class="tag">${esc(n.tag)}</span><h3>${esc(n.title)}</h3><p>${esc(n.text)}</p><ul>${n.points.map((p) => `<li>${esc(p)}</li>`).join('')}</ul>`;
+  }
+  selectNode('api');
+
+  let flowId = 'tick', step = -1, timer = null, anim = null;
+  const chips = $('#flowChips');
+  for (const [id, f] of Object.entries(FLOWS)) {
+    const b = document.createElement('button');
+    b.className = 'chip' + (id === flowId ? ' on' : ''); b.textContent = f.name; b.dataset.flow = id;
+    b.addEventListener('click', () => { stop(); flowId = id; step = -1; chips.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.dataset.flow === id)); render(); });
+    chips.appendChild(b);
+  }
+  function nodesOf(edgeId) { return edgeId.split('-'); }
+  function render() {
+    const steps = FLOWS[flowId].steps;
+    Object.values(edgeEls).forEach((e) => e.classList.remove('lit'));
+    Object.values(nodeEls).forEach((g) => g.classList.remove('lit'));
+    $('#progress').innerHTML = steps.map((_, i) => `<i class="${i <= step ? 'on' : ''}"></i>`).join('');
+    $('#prevBtn').disabled = step <= 0;
+    $('#nextBtn').disabled = step >= steps.length - 1;
+    if (step < 0) { $('#caption').innerHTML = `<b>${esc(FLOWS[flowId].name)}</b> — ${steps.length} steps. Press Play or ▶ to start.`; packet.setAttribute('cx', -20); return; }
+    const [edge, rev, title, text] = steps[step];
+    edgeEls[edge].classList.add('lit');
+    nodesOf(edge).forEach((n) => nodeEls[n].classList.add('lit'));
+    $('#caption').innerHTML = `<b>${step + 1}. ${esc(title)}</b> — ${text}`;
+    animate(edgeEls[edge], rev);
+  }
+  function animate(path, rev) {
+    cancelAnimationFrame(anim);
+    const len = path.getTotalLength(), t0 = performance.now(), dur = 900;
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const frame = (now) => {
+      let k = reduce ? 1 : Math.min(1, (now - t0) / dur);
+      const p = path.getPointAtLength((rev ? 1 - k : k) * len);
+      packet.setAttribute('cx', p.x); packet.setAttribute('cy', p.y);
+      if (k < 1) anim = requestAnimationFrame(frame);
+    };
+    anim = requestAnimationFrame(frame);
+  }
+  function stop() { clearInterval(timer); timer = null; $('#playBtn').textContent = '▶ Play'; }
+  $('#nextBtn').addEventListener('click', () => { stop(); step = Math.min(step + 1, FLOWS[flowId].steps.length - 1); render(); });
+  $('#prevBtn').addEventListener('click', () => { stop(); step = Math.max(step - 1, 0); render(); });
+  $('#playBtn').addEventListener('click', () => {
+    if (timer) return stop();
+    const steps = FLOWS[flowId].steps;
+    if (step >= steps.length - 1) step = -1;
+    $('#playBtn').textContent = '❚❚ Pause';
+    step++; render();
+    timer = setInterval(() => { if (step >= steps.length - 1) return stop(); step++; render(); }, 1800);
+  });
+  render();
+
+  /* ================= LIVE DEMO (same maths as TechnicalIndicators.java) ================= */
+  const STOCKS = [
+    ['RELIANCE', 'Reliance Industries Ltd', 2950, 0.0018],
+    ['TCS', 'Tata Consultancy Services Ltd', 4100, 0.0022],
+    ['HDFCBANK', 'HDFC Bank Ltd', 1700, 0.0018],
+    ['INFY', 'Infosys Ltd', 1850, 0.0022],
+    ['ITC', 'ITC Ltd', 480, 0.0012],
+    ['TATAMOTORS', 'Tata Motors Ltd', 980, 0.0030],
+  ];
+  const gauss = () => { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); };
+  const market = STOCKS.map(([sym, name, base, sigma]) => {
+    const hist = [base]; let drift = 0;
+    for (let i = 0; i < 119; i++) hist.unshift(hist[0] / Math.exp(sigma * gauss()));
+    return { sym, name, sigma, drift, hist, prevClose: base * (1 + gauss() * 0.008), prev: base };
+  });
+  const sma = (p, n) => p.length < n ? null : p.slice(-n).reduce((a, b) => a + b, 0) / n;
+  const emaSeries = (p, n) => { if (p.length < n) return null; const k = 2 / (n + 1), out = new Array(p.length).fill(NaN); out[n - 1] = p.slice(0, n).reduce((a, b) => a + b, 0) / n; for (let i = n; i < p.length; i++) out[i] = p[i] * k + out[i - 1] * (1 - k); return out; };
+  const ema = (p, n) => { const s = emaSeries(p, n); return s ? s[s.length - 1] : null; };
+  const rsi = (p, n) => { if (p.length <= n) return null; let g = 0, l = 0; for (let i = 1; i <= n; i++) { const d = p[i] - p[i - 1]; d >= 0 ? (g += d) : (l -= d); } let ag = g / n, al = l / n; for (let i = n + 1; i < p.length; i++) { const d = p[i] - p[i - 1]; ag = (ag * (n - 1) + Math.max(d, 0)) / n; al = (al * (n - 1) + Math.max(-d, 0)) / n; } return al === 0 ? 100 : 100 - 100 / (1 + ag / al); };
+  const macd = (p, f = 12, s = 26, sig = 9) => { if (p.length < s + sig) return null; const fe = emaSeries(p, f), se = emaSeries(p, s), start = s - 1, line = []; for (let i = start; i < p.length; i++) line.push(fe[i] - se[i]); const k = 2 / (sig + 1); let sv = line.slice(0, sig).reduce((a, b) => a + b, 0) / sig; for (let i = sig; i < line.length; i++) sv = line[i] * k + sv * (1 - k); const last = line[line.length - 1]; return [last, sv, last - sv]; };
+  const bollinger = (p, n = 20, sd = 2) => { const m = sma(p, n); if (m == null) return null; const v = p.slice(-n).reduce((a, x) => a + (x - m) ** 2, 0) / n; return [m + sd * Math.sqrt(v), m, m - sd * Math.sqrt(v)]; };
+  const momentum = (p, n = 10) => p.length <= n ? null : (p[p.length - 1] - p[p.length - 1 - n]) / p[p.length - 1 - n] * 100;
+  function analyse(s) {
+    const p = s.hist, last = p[p.length - 1];
+    const s20 = sma(p, 20), s50 = sma(p, 50), r = rsi(p, 14), m = macd(p), bb = bollinger(p), mo = momentum(p);
+    let score = 0; const reasons = [];
+    if (s20 != null && s50 != null) { if (s20 > s50) { score += 20; reasons.push('SMA 20 is above SMA 50 (short-term uptrend)'); } else { score -= 20; reasons.push('SMA 20 is below SMA 50 (short-term downtrend)'); } }
+    if (s20 != null) { if (last > s20) { score += 10; reasons.push('Price is trading above its 20-period average'); } else { score -= 10; reasons.push('Price is trading below its 20-period average'); } }
+    if (r != null) { if (r < 30) { score += 25; reasons.push(`RSI ${r.toFixed(1)}: oversold, rebound possible`); } else if (r > 70) { score -= 25; reasons.push(`RSI ${r.toFixed(1)}: overbought, pullback risk`); } else reasons.push(`RSI ${r.toFixed(1)}: neutral momentum`); }
+    if (m) { if (m[2] > 0) { score += 20; reasons.push('MACD is above its signal line (bullish)'); } else { score -= 20; reasons.push('MACD is below its signal line (bearish)'); } }
+    if (bb) { if (last <= bb[2]) { score += 15; reasons.push('Price touched the lower Bollinger Band'); } else if (last >= bb[0]) { score -= 15; reasons.push('Price touched the upper Bollinger Band'); } }
+    if (mo != null) { if (mo > 0.3) { score += 10; reasons.push(`Positive momentum (+${mo.toFixed(2)}% over 10 ticks)`); } else if (mo < -0.3) { score -= 10; reasons.push(`Negative momentum (${mo.toFixed(2)}% over 10 ticks)`); } }
+    score = Math.max(-100, Math.min(100, score));
+    const signal = score >= 50 ? 'Strong buy' : score >= 20 ? 'Buy' : score <= -50 ? 'Strong sell' : score <= -20 ? 'Sell' : 'Hold';
+    let trend = 'Gathering data';
+    if (s20 != null) { if (s50 == null) trend = last >= s20 ? 'Uptrend' : 'Downtrend'; else { const gap = (s20 - s50) / s50 * 100; trend = gap > 0.05 && last > s20 ? 'Uptrend' : gap < -0.05 && last < s20 ? 'Downtrend' : 'Sideways'; } }
+    const win = p.slice(-50);
+    return { last, s20, s50, e20: ema(p, 20), r, m, bb, mo, trend, score, signal, reasons, support: Math.min(...win), resistance: Math.max(...win) };
+  }
+  const inr = new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmt = (v) => v == null ? '—' : inr.format(v);
+  const pct = (v) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v).toFixed(2)}%`;
+  let selected = store.get('sb-demo-sel', 'TCS');
+  if (!market.some((s) => s.sym === selected)) selected = 'TCS';
+  let premium = store.get('sb-demo-premium', false);
+
+  function drawWatch() {
+    const wl = $('#watchlist');
+    if (!wl.children.length) {
+      market.forEach((s) => {
+        const b = document.createElement('button');
+        b.className = 'watch-row'; b.dataset.sym = s.sym; b.setAttribute('role', 'listitem');
+        b.innerHTML = `<span><b>${s.sym}</b><small>${esc(s.name)}</small></span><span class="num price"></span><span class="num chg"></span>`;
+        b.addEventListener('click', () => { selected = s.sym; store.set('sb-demo-sel', selected); drawWatch(); drawDetail(); });
+        wl.appendChild(b);
+      });
+    }
+    market.forEach((s) => {
+      const row = wl.querySelector(`[data-sym="${s.sym}"]`), last = s.hist[s.hist.length - 1], ch = (last - s.prevClose) / s.prevClose * 100;
+      row.classList.toggle('sel', s.sym === selected);
+      row.querySelector('.price').textContent = fmt(last);
+      const c = row.querySelector('.chg'); c.textContent = pct(ch); c.className = 'num chg ' + (ch >= 0 ? 'up' : 'down');
+      if (s.prev !== last) { row.classList.remove('flash-up', 'flash-down'); void row.offsetWidth; row.classList.add(last > s.prev ? 'flash-up' : 'flash-down'); }
+    });
+  }
+  function spark(p, s20, up) {
+    const W = 600, H = 190, pts = p.slice(premium ? -120 : -60), min = Math.min(...pts), max = Math.max(...pts), pad = (max - min) * 0.1 || 1;
+    const x = (i) => i / (pts.length - 1) * W, y = (v) => H - (v - min + pad) / (max - min + 2 * pad) * H;
+    const line = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+    const col = up ? 'var(--up)' : 'var(--down)';
+    const smaLine = (() => { const out = []; for (let i = 19; i < pts.length; i++) { const a = pts.slice(i - 19, i + 1).reduce((q, b) => q + b, 0) / 20; out.push(`${out.length ? 'L' : 'M'}${x(i).toFixed(1)},${y(a).toFixed(1)}`); } return out.join(' '); })();
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Price chart">
+      <path d="${line} L${W},${H} L0,${H} Z" fill="${col}" opacity=".10"/>
+      <path d="${line}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke"/>
+      <path d="${smaLine}" fill="none" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"/>
+    </svg>`;
+  }
+  function drawDetail() {
+    const s = market.find((m) => m.sym === selected), a = analyse(s), ch = (a.last - s.prevClose) / s.prevClose * 100, up = ch >= 0;
+    const tone = a.signal.includes('buy') || a.signal === 'Buy' ? 'up' : a.signal.toLowerCase().includes('sell') ? 'down' : '';
+    const m = (label, value, pro) => `<div class="metric${pro ? ' pro' : ''}"><dt>${label}</dt><dd class="num">${value}</dd></div>`;
+    $('#detail').className = 'panel detail' + (premium ? '' : ' locked');
+    $('#detail').innerHTML = `
+      <div class="detail-head">
+        <div><h3>${s.sym}</h3><p class="muted">${esc(s.name)} · NSE</p></div>
+        <div style="text-align:right"><div class="big num">₹${fmt(a.last)}</div><div class="num ${up ? 'up' : 'down'}">${pct(ch)} today</div></div>
+      </div>
+      <div class="chart-box">${spark(s.hist, a.s20, up)}</div>
+      <p class="muted" style="font-size:.82rem">Solid: price · dashed: SMA 20 · showing ${premium ? '120' : '60'} ticks (${premium ? 'Premium: full session' : 'Free: last 60'})</p>
+      <dl class="metrics" style="margin-top:10px">
+        ${m('Trend', a.trend)}${m('SMA 20', fmt(a.s20))}${m('SMA 50', fmt(a.s50))}${m('EMA 20', fmt(a.e20))}
+        ${m('RSI 14', a.r == null ? '—' : a.r.toFixed(1), 1)}${m('MACD hist.', a.m ? a.m[2].toFixed(3) : '—', 1)}
+        ${m('Support', fmt(a.support), 1)}${m('Resistance', fmt(a.resistance), 1)}
+      </dl>
+      ${premium ? `
+        <div class="signal"><span class="lbl ${tone}">${a.signal}</span><span class="num muted">Score ${a.score > 0 ? '+' : ''}${a.score}</span><div class="gauge" aria-hidden="true"><span style="left:${(a.score + 100) / 2}%"></span></div></div>
+        <ul class="reasons">${a.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : `
+        <div class="lock-note"><b>Premium analysis is locked on the Free plan.</b> Premium (₹499/month or ₹4,999/year) unlocks RSI, MACD, Bollinger Bands, support/resistance and a buy/sell signal that explains its reasoning. Switch to <b>Premium</b> above to preview it.</div>`}
+      <p class="disclaimer">Simulated prices for demonstration. Not investment advice.</p>`;
+  }
+  function tick() {
+    market.forEach((s) => {
+      s.prev = s.hist[s.hist.length - 1];
+      s.drift = 0.95 * s.drift + 0.05 * gauss() * s.sigma;
+      s.hist.push(s.prev * Math.exp(s.drift + s.sigma * gauss()));
+      if (s.hist.length > 300) s.hist.shift();
+    });
+    drawWatch(); drawDetail();
+  }
+  function setTier(p) { premium = p; store.set('sb-demo-premium', p); $('#tierFree').classList.toggle('on', !p); $('#tierPro').classList.toggle('on', p); drawDetail(); }
+  $('#tierFree').addEventListener('click', () => setTier(false));
+  $('#tierPro').addEventListener('click', () => setTier(true));
+  drawWatch(); setTier(premium);
+  setInterval(() => { if (!document.hidden) tick(); }, 2000);
+
+  /* ================= API EXPLORER ================= */
+  const hl = (obj) => esc(JSON.stringify(obj, null, 2))
+    .replace(/(&quot;[^&]*?&quot;)(\s*:)/g, '<span class="k">$1</span>$2')
+    .replace(/:\s(&quot;.*?&quot;)/g, ': <span class="s">$1</span>')
+    .replace(/:\s(-?\d+\.?\d*)/g, ': <span class="n">$1</span>');
+  const USER = { id: 1, fullName: 'Demo Trader', email: 'demo@stockbroker.com', role: 'USER', plan: 'FREE', premium: false };
+  const API = [
+    { m: 'POST', p: '/api/auth/register', a: 'public', d: 'Create an account and sign in immediately. Password: 8–64 chars with a letter and a number.', req: { fullName: 'Jane Trader', email: 'jane@example.com', password: 'Secret123' }, res: { token: 'eyJhbGciOiJIUzI1NiJ9…', tokenType: 'Bearer', expiresInMs: 86400000, user: { ...USER, fullName: 'Jane Trader', email: 'jane@example.com' } }, codes: '201 · 400 validation · 409 email taken' },
+    { m: 'POST', p: '/api/auth/login', a: 'public', d: 'Sign in with email and password; returns a JWT.', req: { email: 'demo@stockbroker.com', password: '••••••••' }, res: { token: 'eyJhbGciOiJIUzI1NiJ9…', tokenType: 'Bearer', expiresInMs: 86400000, user: USER }, codes: '200 · 401 invalid email or password' },
+    { m: 'POST', p: '/api/auth/logout', a: 'auth', d: 'Revoke the current token (Redis blacklist until expiry).', res: { message: 'Signed out successfully' }, codes: '200 · 401' },
+    { m: 'GET', p: '/api/auth/me', a: 'auth', d: 'Current user profile and plan.', res: USER, codes: '200 · 401' },
+    { m: 'GET', p: '/api/stocks', a: 'auth', d: 'All stocks with their latest quote (Redis first, MySQL fallback).', res: [{ symbol: 'TCS', companyName: 'Tata Consultancy Services Ltd', sector: 'Information Technology', exchange: 'NSE', price: 4120.5, change: 20.5, changePercent: 0.5, volume: 125000 }, '…11 more'], codes: '200 · 401' },
+    { m: 'GET', p: '/api/stocks/{symbol}', a: 'auth', d: 'One live quote. Symbols are case-insensitive.', res: { symbol: 'TCS', price: 4120.5, open: 4095, high: 4131.2, low: 4088.4, previousClose: 4100 }, codes: '200 · 404 unknown stock' },
+    { m: 'GET', p: '/api/stocks/{symbol}/history?limit=300', a: 'tier', d: 'Price history, oldest first. Free: up to 60 points; Premium: up to 300.', res: [{ timestamp: 1730000000000, price: 4118.2, volume: 1200 }, { timestamp: 1730000002000, price: 4120.5, volume: 1640 }], codes: '200 · 404' },
+    { m: 'GET', p: '/api/stocks/{symbol}/analysis', a: 'tier', d: 'Live technical analysis. Premium-only fields are null and premiumLocked is true on Free.', res: { symbol: 'TCS', currentPrice: 4120.5, trend: 'UP', sma20: 4110.2, sma50: 4101.7, premiumLocked: false, rsi14: 58.3, macdHistogram: 0.4182, signal: 'BUY', signalScore: 40, reasons: ['SMA 20 is above SMA 50 (short-term uptrend)', 'MACD is above its signal line (bullish)'] }, codes: '200 · 404 · 503 warming up' },
+    { m: 'GET', p: '/api/subscriptions/plans', a: 'public', d: 'Plans and prices in INR.', res: [{ code: 'FREE', price: 0 }, { code: 'PREMIUM_MONTHLY', name: 'Premium Monthly', price: 499, currency: 'INR', durationDays: 30 }, { code: 'PREMIUM_YEARLY', price: 4999, durationDays: 365 }], codes: '200' },
+    { m: 'GET', p: '/api/subscriptions/me', a: 'auth', d: 'Current plan, expiry date and days remaining.', res: { plan: 'PREMIUM_MONTHLY', premium: true, premiumUntil: '2026-11-26T08:00:00Z', daysRemaining: 29 }, codes: '200 · 401' },
+    { m: 'GET', p: '/api/subscriptions/history', a: 'auth', d: 'Billing history, newest first.', res: [{ id: 3, plan: 'PREMIUM_MONTHLY', amount: 499, status: 'ACTIVE', paymentReference: 'DEMO-8F2C1A9B3D4E5' }], codes: '200 · 401' },
+    { m: 'POST', p: '/api/subscriptions/subscribe', a: 'auth', d: 'Activate Premium, or extend it from the current end date if already active.', req: { plan: 'PREMIUM_MONTHLY' }, res: { id: 3, plan: 'PREMIUM_MONTHLY', amount: 499, status: 'ACTIVE', endDate: '2026-11-26T08:00:00Z' }, codes: '200 · 400 plan required / FREE · 401' },
+    { m: 'POST', p: '/api/subscriptions/cancel', a: 'auth', d: 'Cancel Premium immediately and return to Free.', res: { plan: 'FREE', premium: false, premiumUntil: null, daysRemaining: 0 }, codes: '200 · 400 no active plan' },
+    { m: 'GET', p: '/api/health', a: 'auth', d: 'Dependency check for MySQL and Redis.', res: { mysql: 'UP', redis: 'UP' }, codes: '200' },
+    { m: 'WS', p: '/ws → /topic/prices', a: 'public', d: 'STOMP over WebSocket. Every tick for every stock (or /topic/prices/{SYMBOL} for one).', res: { symbol: 'INFY', price: 1852.4, change: 2.4, changePercent: 0.13, timestamp: 1730000004000 }, codes: 'push every 2 s per stock' },
+  ];
+  const ACCESS = { all: 'All', public: 'Public', auth: 'Signed-in', tier: 'Free vs Premium' };
+  let apiFilter = 'all', apiSel = 7;
+  const af = $('#apiFilter');
+  for (const [k, v] of Object.entries(ACCESS)) {
+    const b = document.createElement('button'); b.className = 'chip' + (k === apiFilter ? ' on' : ''); b.textContent = v; b.dataset.k = k;
+    b.addEventListener('click', () => { apiFilter = k; af.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.dataset.k === k)); drawApi(); });
+    af.appendChild(b);
+  }
+  $('#apiSearch').addEventListener('input', drawApi);
+  function drawApi() {
+    const q = $('#apiSearch').value.trim().toLowerCase();
+    const rows = API.map((e, i) => [e, i]).filter(([e]) => (apiFilter === 'all' || e.a === apiFilter) && (!q || (e.p + ' ' + e.d + ' ' + e.m).toLowerCase().includes(q)));
+    $('#apiRows').innerHTML = rows.length ? rows.map(([e, i]) => `
+      <button class="ep${i === apiSel ? ' sel' : ''}" data-i="${i}">
+        <span class="method m-${e.m === 'WS' ? 'GET' : e.m}">${e.m}</span><code>${esc(e.p)}</code>
+        <span class="badge ${e.a === 'public' ? 'pub' : e.a === 'tier' ? 'tier' : ''}">${{ public: 'Public', auth: 'JWT', tier: 'JWT · tiered' }[e.a]}</span>
+      </button>`).join('') : '<p class="muted" style="padding:10px">No endpoint matches.</p>';
+    $('#apiRows').querySelectorAll('.ep').forEach((b) => b.addEventListener('click', () => { apiSel = +b.dataset.i; drawApi(); }));
+    const e = API[apiSel];
+    $('#apiDetail').innerHTML = `
+      <div><span class="method m-${e.m === 'WS' ? 'GET' : e.m}" style="padding:3px 8px">${e.m}</span></div>
+      <h3>${esc(e.p)}</h3><p>${esc(e.d)}</p>
+      <p><span class="label">Responses</span><br/><span class="mono">${esc(e.codes)}</span></p>
+      ${e.a !== 'public' ? '<p class="muted mono">Authorization: Bearer &lt;token&gt;</p>' : ''}
+      ${e.req ? `<span class="label">Request body</span><pre>${hl(e.req)}</pre>` : ''}
+      <span class="label">${e.m === 'WS' ? 'Message' : 'Response'}</span><pre>${hl(e.res)}</pre>`;
+  }
+  drawApi();
+
+  /* ================= TESTS ================= */
+  // Counts match the test files in the repository; CI on GitHub Actions is the source of truth.
+  const LAYERS = { backend: ['Backend unit', 'layer-backend', 'var(--accent)'], web: ['API / web layer', 'layer-web', '#7b61d1'], data: ['Database (H2)', 'layer-data', 'var(--up)'], frontend: ['Frontend (React)', 'layer-frontend', 'var(--gold)'] };
+  const SUITES = [
+    ['TechnicalIndicatorsTest', 'backend', 24, 'SMA/EMA lag, RSI bounds (0, 100), MACD sign in up/down trends, Bollinger symmetry, volatility, momentum, min/max windows, not-enough-data cases.'],
+    ['SubscriptionServiceTest', 'backend', 12, 'Plans and prices, status and days left, subscribe vs extend-from-end-date, cancel, scheduled expiry (and not downgrading users with another active period), Kafka outage tolerance.'],
+    ['StockAnalysisServiceTest', 'backend', 10, 'Free tier hides premium fields, premium indicators and reasons, oversold detection, 2-second Redis cache per tier, 404 / 503 cases, Redis outage tolerance.'],
+    ['PriceCacheServiceTest', 'backend', 10, 'Redis key layout, JSON round-trips, corrupt entries skipped, 300-tick history trimming, TTL on cached analysis.'],
+    ['AuthServiceTest', 'backend', 9, 'Sign-up lower-cases email and hashes the password, duplicate email → 409, login updates last-login, wrong password issues no token, logout blacklists for remaining lifetime.'],
+    ['JwtServiceTest', 'backend', 7, 'Subject/role/id claims, expiry, unique ids, garbage / tampered / foreign-key / expired tokens rejected.'],
+    ['MarketDataSimulatorTest', 'backend', 6, 'One tick per stock keyed by symbol, 120-point backfill when Redis is empty, disabled switch, waits for seeding.'],
+    ['TokenBlacklistServiceTest', 'backend', 6, 'Stores jti with TTL, ignores expired tokens, fails closed when Redis is down.'],
+    ['JwtAuthenticationFilterTest', 'backend', 6, 'Valid token authenticates, revoked / invalid / non-Bearer / deleted-user cases stay anonymous and the chain continues.'],
+    ['MarketDataConsumerTest', 'backend', 5, 'Tick → Redis + MySQL + two WebSocket topics, unknown symbols ignored, Redis outage still archives and streams.'],
+    ['DomainModelTest', 'backend', 11, 'Plan prices and durations, yearly cheaper than 12 months, premium expiry, DTOs hide expired premium and never expose passwords.'],
+    ['CustomUserDetailsServiceTest', 'backend', 4, 'ROLE_USER always, ROLE_PREMIUM only while premium is active.'],
+    ['SubscriptionEventListenerTest', 'backend', 3, 'Counts events per type in Redis and swallows Redis failures.'],
+    ['GlobalExceptionHandlerTest', 'backend', 3, 'Consistent JSON errors; generic credentials message; no internals leaked.'],
+    ['StockControllerTest', 'web', 12, 'Auth required, Redis-then-MySQL quotes, case-insensitive symbols, 60 vs 300 history points by tier, MySQL history fallback, analysis tier selection, 404 / 503.'],
+    ['AuthControllerTest', 'web', 11, 'Register 201 / validation / 409, login 200 / 401, malformed JSON 400, /me and /logout need a token.'],
+    ['SubscriptionControllerTest', 'web', 8, 'Public plans, protected status, subscribe, missing or unknown plan → 400, history, cancel errors.'],
+    ['RepositoryIntegrationTest', 'data', 6, 'Real Hibernate mappings on H2: case-insensitive email, expiry JPQL query, newest-first history, tick paging.'],
+    ['client.test.js', 'frontend', 11, 'Error messages, token storage, Bearer interceptor, auto sign-out on 401 (but not on failed login), every API wrapper URL.'],
+    ['Navbar + TickerTape', 'frontend', 10, 'Initials, feed status, Premium link, account menu, sign-out redirect, click-outside; seamless ticker loop and colours.'],
+    ['Dashboard.test.jsx', 'frontend', 9, 'Breadth stats, top gainer/loser, search, sort, colour by direction, row navigation, upsell only for Free, loading/error.'],
+    ['format.test.js', 'frontend', 9, 'Indian digit grouping, ₹ prefix, real minus sign, %, compact volume, dates, labels for every backend signal.'],
+    ['Signup.test.jsx', 'frontend', 8, 'Six validation rules before any network call, successful sign-up, duplicate email message.'],
+    ['AuthContext.test.jsx', 'frontend', 7, 'Login/register store the token, logout revokes and clears even if the server fails, session restore and expired-token drop.'],
+    ['Plans.test.jsx', 'frontend', 7, 'Prices and per-month maths, confirm dialog, Escape/Cancel, activation error, billing history, cancel with confirmation.'],
+    ['App.test.jsx', 'frontend', 7, 'Route guards for guests and signed-in users, session-restore wait, unknown URLs.'],
+    ['StockDetail.test.jsx', 'frontend', 6, 'Quote header, history + analysis requests, live ticks appended (stale ignored), Premium lock vs signal and reasons, unknown stock.'],
+    ['MarketContext.test.jsx', 'frontend', 5, 'Loads stocks, connects STOMP, applies streamed quotes, reconnecting state, disconnect on unmount.'],
+    ['Login.test.jsx', 'frontend', 5, 'Form, demo-account fill, successful sign-in redirect, server error, signed-out notice.'],
+  ];
+  const total = SUITES.reduce((a, s) => a + s[2], 0);
+  $('#kpiTests').textContent = total;
+  let testFilter = 'all', open = null;
+  const tf = $('#testFilter');
+  [['all', 'All layers'], ...Object.entries(LAYERS).map(([k, v]) => [k, v[0]])].forEach(([k, label]) => {
+    const b = document.createElement('button'); b.className = 'chip' + (k === testFilter ? ' on' : ''); b.textContent = label; b.dataset.k = k;
+    b.addEventListener('click', () => { testFilter = k; open = null; tf.querySelectorAll('.chip').forEach((c) => c.classList.toggle('on', c.dataset.k === k)); drawTests(); });
+    tf.appendChild(b);
+  });
+  function drawDonut() {
+    const byLayer = Object.keys(LAYERS).map((k) => [k, SUITES.filter((s) => s[1] === k).reduce((a, s) => a + s[2], 0)]);
+    const C = 2 * Math.PI * 46; let off = 0;
+    $('#donut').innerHTML = byLayer.map(([k, n]) => { const len = n / total * C; const seg = `<circle cx="60" cy="60" r="46" fill="none" stroke="${LAYERS[k][2]}" stroke-width="14" stroke-dasharray="${len - 1.5} ${C - len + 1.5}" stroke-dashoffset="${-off}" transform="rotate(-90 60 60)"><title>${LAYERS[k][0]}: ${n}</title></circle>`; off += len; return seg; }).join('') +
+      `<text x="60" y="58" text-anchor="middle" style="font:700 22px var(--display);fill:var(--ink)">${total}</text><text x="60" y="76" text-anchor="middle" style="font:600 10px var(--body);fill:var(--up)">all passing</text>`;
+    $('#legend').innerHTML = byLayer.map(([k, n]) => `<div><span><i style="background:${LAYERS[k][2]}"></i>${LAYERS[k][0]}</span><b class="num">${n}</b></div>`).join('');
+  }
+  function drawTests() {
+    const list = SUITES.filter((s) => testFilter === 'all' || s[1] === testFilter);
+    const max = Math.max(...SUITES.map((s) => s[2]));
+    $('#suites').innerHTML = list.map((s) => `
+      <button class="suite" data-n="${esc(s[0])}" aria-expanded="${open === s[0]}">
+        <span class="name" title="${esc(s[0])}">${esc(s[0])}</span>
+        <span class="bar"><span class="${LAYERS[s[1]][1]}" style="width:${s[2] / max * 100}%"></span></span>
+        <b class="num">${s[2]}</b>
+      </button>${open === s[0] ? `<div class="suite-info"><b>${LAYERS[s[1]][0]}.</b> ${esc(s[3])}</div>` : ''}`).join('');
+    $('#suites').querySelectorAll('.suite').forEach((b) => b.addEventListener('click', () => { open = open === b.dataset.n ? null : b.dataset.n; drawTests(); }));
+  }
+  drawDonut(); drawTests();
+
+  /* ================= ROADMAP ================= */
+  const ROAD = [
+    ['Delivered', '✅', [
+      'Sign up / sign in / sign out with JWT + Redis revocation',
+      'Live prices: Kafka → Redis → WebSocket pipeline',
+      'Free and Premium technical analysis with explained signals',
+      'Premium plans: subscribe, extend, cancel, auto-expiry',
+      'Docker Compose for the full stack',
+      'Automated test suite + CI on every push',
+      'Architecture documentation and this showcase',
+    ], true],
+    ['Before production', '🛠', [
+      'Real payments (Razorpay / Stripe) with webhook verification',
+      'Move JWT to an httpOnly cookie; rotate secrets',
+      'Rate limiting on sign-in',
+      'Flyway migrations instead of ddl-auto',
+      'Prune / partition the price_ticks archive',
+    ], false],
+    ['Next features', '🚀', [
+      'Real market-data vendor feed',
+      'Watchlists and price alerts',
+      'Admin dashboard (users, revenue, subscriptions)',
+      'Horizontal scaling with a shared STOMP relay',
+      'Email receipts from subscription events',
+    ], false],
+  ];
+  const checks = store.get('sb-roadmap', {});
+  function drawRoad() {
+    $('#road').innerHTML = ROAD.map(([title, icon, items, done], gi) => {
+      const n = items.filter((_, i) => done || checks[`${gi}-${i}`]).length;
+      return `<div class="panel"><h3><span aria-hidden="true">${icon}</span>${title}<span class="pct">${n}/${items.length}</span></h3><ul>${items.map((it, i) => {
+        const id = `${gi}-${i}`, on = done || !!checks[id];
+        return `<li><label><input type="checkbox" data-id="${id}" ${on ? 'checked' : ''} ${done ? 'disabled' : ''}/><span>${esc(it)}</span></label></li>`;
+      }).join('')}</ul></div>`;
+    }).join('');
+    $('#road').querySelectorAll('input:not([disabled])').forEach((c) => c.addEventListener('change', () => { checks[c.dataset.id] = c.checked; store.set('sb-roadmap', checks); drawRoad(); }));
+  }
+  drawRoad();
+
+  /* ---------------- active section in nav ---------------- */
+  const links = [...document.querySelectorAll('.toc a')];
+  const io = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) links.forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-40% 0px -55% 0px' });
+  document.querySelectorAll('section.block').forEach((s) => io.observe(s));
+})();
+</script>
+</body>
+</html>
