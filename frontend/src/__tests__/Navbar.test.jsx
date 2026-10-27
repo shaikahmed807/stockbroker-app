@@ -92,13 +92,15 @@ describe('Navbar', () => {
 describe('TickerTape', () => {
   it('renders every stock twice for the seamless scroll loop', () => {
     useMarket.mockReturnValue({ quotes: QUOTES });
-    render(
+    const { container } = render(
       <MemoryRouter>
         <TickerTape />
       </MemoryRouter>
     );
     expect(screen.getAllByText('TCS')).toHaveLength(2);
-    expect(screen.getAllByRole('link').filter((a) => a.getAttribute('href') === '/stocks/SBIN')).toHaveLength(2);
+    expect(container.querySelectorAll('a[href="/stocks/SBIN"]')).toHaveLength(2);
+    // the duplicate copy is hidden from screen readers, so each stock is announced once
+    expect(screen.getAllByRole('link').filter((a) => a.getAttribute('href') === '/stocks/SBIN')).toHaveLength(1);
   });
 
   it('marks rising and falling stocks', () => {
