@@ -19,7 +19,9 @@ def junit_counts(files):
         for s in nodes:
             t, fl, er, sk = (int(s.get(k, 0)) for k in ("tests", "failures", "errors", "skipped"))
             total, failures, errors, skipped = total + t, failures + fl, errors + er, skipped + sk
-            suites.append((s.get("name", "?").split(".")[-1], t, fl + er))
+            name = s.get("name", "?")
+            name = name.rsplit("/", 1)[-1] if "/" in name else name.split(".")[-1]
+            suites.append((name, t, fl + er))
     return total, failures, errors, skipped, suites
 
 
